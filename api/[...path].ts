@@ -584,15 +584,83 @@ async function handleDashboardSummary(req: any, res: any) {
 
   // Count TRC expiring (within 90 days)
   let trcExpiring = 0;
+  let docsPending = 0;
   workers.forEach((w) => {
-    const trc = db.findOne('worker_documents', (d) => d.worker_id === w.id && d.doc_type === 'trc');
+    if (w.status !== 'active') return;
+    const trc = db.findOne('worker_documents', (d: any) => d.worker_id === w.id && d.doc_type === 'trc');
     if (trc?.expiry_date) {
       const days = Math.ceil((new Date(trc.expiry_date).getTime() - Date.now()) / 86400000);
-      if (days >= 0 && days <= 90) trcExpiring++;
+      if (days <= 90) trcExpiring++;
+    }
+    // Count workers missing key docs (trc, welding_cert, passport)
+    const docTypes = ['trc', 'welding_cert', 'passport'];
+    docTypes.forEach((dt) => {
+      const doc = db.findOne('worker_documents', (d: any) => d.worker_id === w.id && d.doc_type === dt);
+      if (!doc) docsPending++;
+    });
+  });
+
+  // Count critical alerts
+  let criticalAlerts = 0;
+  workers.forEach((w) => {
+    const trc = db.findOne('worker_documents', (d: any) => d.worker_id === w.id && d.doc_type === 'trc');
+    if (trc?.expiry_date) {
+      const days = Math.ceil((new Date(trc.expiry_date).getTime() - Date.now()) / 86400000);
+      if (days <= 30) criticalAlerts++;
     }
   });
 
-  return ok(res, { activeWorkers, totalWorkers: workers.length, activeProjects, totalExpenses, pipelineCandidates, trcExpiring, budgetWarnings: 0 });
+  // Recent arrivals (pipeline candidates with stage visa_approved)
+  const recentArrivals = db.count('pipeline_candidates', (c: any) => c.stage === 'visa_approved' || c.stage === 'arrived');
+
+  // Budget warnings
+  let budgetWarnings = 0;
+  db.findAll('projects', (p: any) => p.phase === 'active' || p.phase === 'mobilization').forEach((p: any) => {
+    const budget = (p.budget_labor||0)+(p.budget_transport||0)+(p.budget_accommodation||0)+(p.budget_tools||0)+(p.budget_per_diem||0)+(p.budget_other||0);
+    const actual = (p.actual_labor||0)+(p.actual_transport||0)+(p.actual_accommodation||0)+(p.actual_tools||0)+(p.actual_per_diem||0)+(p.actual_other||0);
+    if (budget > 0 && actual / budget > 0.7) budgetWarnings++;
+  });
+
+  // Monthly costs from expenses — last 6 months
+  const allExpenses = db.findAll('expenses');
+  const months: Record<string, { labor: number; transport: number; accommodation: number; other: number }> = {};
+  // Initialize last 6 months
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    months[key] = { labor: 0, transport: 0, accommodation: 0, other: 0 };
+  }
+  // Accumulate expenses into months
+  allExpenses.forEach((e: any) => {
+    if (!e.expense_date) return;
+    const key = e.expense_date.slice(0, 7); // "YYYY-MM"
+    if (!months[key]) return;
+    const catId = e.category_id;
+    const amt = e.amount || 0;
+    if (catId === 1 || catId === 2) months[key].transport += amt;       // Transport + Fuel
+    else if (catId === 3) months[key].accommodation += amt;              // Accommodation
+    else months[key].other += amt;                                       // Per Diem, Tools, Permits, Other
+  });
+  // Add labor estimate from project actuals spread evenly
+  const activeProjectsList = db.findAll('projects', (p: any) => p.phase === 'active' || p.phase === 'finishing');
+  const monthKeys = Object.keys(months);
+  activeProjectsList.forEach((p: any) => {
+    const laborPerMonth = Math.round((p.actual_labor || 0) / Math.max(monthKeys.length, 1));
+    monthKeys.forEach((k) => { months[k].labor += laborPerMonth; });
+  });
+
+  const monthlyCosts = Object.entries(months).map(([key, vals]) => {
+    const d = new Date(key + '-01');
+    return { month: d.toLocaleDateString('en-US', { month: 'short' }), ...vals };
+  });
+
+  return ok(res, {
+    activeWorkers, totalWorkers: workers.length, activeProjects, totalExpenses,
+    pipelineCandidates, trcExpiring, budgetWarnings, monthlyCosts,
+    recentArrivals, docsPending, criticalAlerts,
+  });
 }
 
 async function handleAlerts(req: any, res: any) {

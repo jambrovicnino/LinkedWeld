@@ -11,23 +11,24 @@ export interface Alert {
   daysLeft?: number;
 }
 
+export interface MonthlyCost {
+  month: string;
+  labor: number;
+  transport: number;
+  accommodation: number;
+  other: number;
+}
+
 export interface DashboardSummary {
   activeWorkers: number;
   totalWorkers: number;
   activeProjects: number;
-  totalProjects: number;
   totalExpenses: number;
   pipelineCandidates: number;
-  alertsCount: number;
-  warningsCount: number;
-  projectSummaries: {
-    id: number;
-    name: string;
-    phase: string;
-    totalBudget: number;
-    totalActual: number;
-    workerCount: number;
-    progress: number;
-  }[];
-  monthlyCosts: { month: string; amount: number }[];
+  trcExpiring: number;
+  budgetWarnings: number;
+  monthlyCosts: MonthlyCost[];
+  recentArrivals: number;
+  docsPending: number;
+  criticalAlerts: number;
 }

@@ -14,31 +14,13 @@ import {
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
 } from 'recharts';
-import type { Alert as AlertType } from '@/types';
-
-interface DashboardStats {
-  activeWorkers: number;
-  totalWorkers: number;
-  activeProjects: number;
-  totalExpenses: number;
-  pipelineCandidates: number;
-  trcExpiring: number;
-  budgetWarnings: number;
-}
-
-const COST_DATA = [
-  { month: 'Sep', labor: 8000, transport: 2000, accommodation: 3000, other: 1500 },
-  { month: 'Oct', labor: 12000, transport: 3000, accommodation: 3500, other: 2000 },
-  { month: 'Nov', labor: 15000, transport: 2500, accommodation: 3200, other: 1800 },
-  { month: 'Dec', labor: 11000, transport: 3200, accommodation: 4000, other: 2200 },
-  { month: 'Jan', labor: 18000, transport: 4000, accommodation: 4500, other: 2500 },
-  { month: 'Feb', labor: 20000, transport: 3500, accommodation: 4200, other: 2800 },
-];
+import type { Alert as AlertType, DashboardSummary } from '@/types';
+import { ProcessDiagram } from '@/components/dashboard/ProcessDiagram';
 
 export function DashboardPage() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [stats, setStats] = useState<DashboardSummary | null>(null);
   const [alerts, setAlerts] = useState<AlertType[]>([]);
 
   useEffect(() => {
@@ -50,12 +32,19 @@ export function DashboardPage() {
   const criticalAlerts = alerts.filter(a => a.severity === 'critical');
   const warningAlerts = alerts.filter(a => a.severity === 'warning');
 
+  const costData = stats?.monthlyCosts && stats.monthlyCosts.length > 0
+    ? stats.monthlyCosts
+    : [];
+
   return (
     <div className='space-y-6'>
       <div>
         <h1 className='text-2xl font-bold text-gray-800'>{greeting}</h1>
         <p className='text-gray-500 mt-1'>Here&apos;s your workforce and project overview.</p>
       </div>
+
+      {/* Process Lifecycle Diagram — mission control strip */}
+      <ProcessDiagram stats={stats} alerts={alerts} />
 
       {/* Alert summary row */}
       {alerts.length > 0 && (
@@ -160,31 +149,37 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className='h-72'>
-              <ResponsiveContainer width='100%' height='100%'>
-                <AreaChart data={COST_DATA} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-                  <defs>
-                    <linearGradient id='laborGrad' x1='0' y1='0' x2='0' y2='1'>
-                      <stop offset='5%' stopColor='#2196F3' stopOpacity={0.2} />
-                      <stop offset='95%' stopColor='#2196F3' stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id='transportGrad' x1='0' y1='0' x2='0' y2='1'>
-                      <stop offset='5%' stopColor='#00BCD4' stopOpacity={0.2} />
-                      <stop offset='95%' stopColor='#00BCD4' stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray='3 3' stroke='#e5e7eb' />
-                  <XAxis dataKey='month' tick={{ fill: '#9ca3af', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#9ca3af', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `\u20AC${v / 1000}k`} />
-                  <RTooltip
-                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#374151', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    formatter={(value: number) => [`\u20AC${value.toLocaleString()}`, undefined]}
-                  />
-                  <Area type='monotone' dataKey='labor' stroke='#2196F3' strokeWidth={2} fill='url(#laborGrad)' name='Labor' />
-                  <Area type='monotone' dataKey='transport' stroke='#00BCD4' strokeWidth={2} fill='url(#transportGrad)' name='Transport' />
-                  <Area type='monotone' dataKey='accommodation' stroke='#10b981' strokeWidth={2} fillOpacity={0.1} fill='#10b981' name='Accommodation' />
-                  <Area type='monotone' dataKey='other' stroke='#f59e0b' strokeWidth={2} fillOpacity={0.1} fill='#f59e0b' name='Other' />
-                </AreaChart>
-              </ResponsiveContainer>
+              {costData.length > 0 ? (
+                <ResponsiveContainer width='100%' height='100%'>
+                  <AreaChart data={costData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+                    <defs>
+                      <linearGradient id='laborGrad' x1='0' y1='0' x2='0' y2='1'>
+                        <stop offset='5%' stopColor='#2196F3' stopOpacity={0.2} />
+                        <stop offset='95%' stopColor='#2196F3' stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id='transportGrad' x1='0' y1='0' x2='0' y2='1'>
+                        <stop offset='5%' stopColor='#00BCD4' stopOpacity={0.2} />
+                        <stop offset='95%' stopColor='#00BCD4' stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray='3 3' stroke='#e5e7eb' />
+                    <XAxis dataKey='month' tick={{ fill: '#9ca3af', fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: '#9ca3af', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `\u20AC${v / 1000}k`} />
+                    <RTooltip
+                      contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#374151', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      formatter={(value: number) => [`\u20AC${value.toLocaleString()}`, undefined]}
+                    />
+                    <Area type='monotone' dataKey='labor' stroke='#2196F3' strokeWidth={2} fill='url(#laborGrad)' name='Labor' />
+                    <Area type='monotone' dataKey='transport' stroke='#00BCD4' strokeWidth={2} fill='url(#transportGrad)' name='Transport' />
+                    <Area type='monotone' dataKey='accommodation' stroke='#10b981' strokeWidth={2} fillOpacity={0.1} fill='#10b981' name='Accommodation' />
+                    <Area type='monotone' dataKey='other' stroke='#f59e0b' strokeWidth={2} fillOpacity={0.1} fill='#f59e0b' name='Other' />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className='h-full flex items-center justify-center text-gray-400 text-sm'>
+                  Loading cost data...
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
