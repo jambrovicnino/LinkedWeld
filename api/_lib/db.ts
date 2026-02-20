@@ -1,4 +1,5 @@
-import initSqlJs, { Database as SqlJsDatabase } from 'sql.js';
+// @ts-nocheck
+import initSqlJs from 'sql.js';
 
 interface RunResult {
   changes: number;
@@ -18,7 +19,7 @@ export interface WrappedDatabase {
 
 let db: WrappedDatabase | null = null;
 
-function wrapDatabase(sqlDb: SqlJsDatabase): WrappedDatabase {
+function wrapDatabase(sqlDb: any): WrappedDatabase {
   return {
     prepare(sql: string): PreparedStatement {
       return {
