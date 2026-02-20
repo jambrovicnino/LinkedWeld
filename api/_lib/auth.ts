@@ -1,5 +1,4 @@
-import jwt from 'jsonwebtoken';
-import type { VercelRequest } from '@vercel/node';
+const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'linkedweld-dev-secret-change-in-production';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'linkedweld-refresh-secret-change';
@@ -25,8 +24,8 @@ export function verifyRefreshToken(token: string): TokenPayload {
   return jwt.verify(token, JWT_REFRESH_SECRET) as TokenPayload;
 }
 
-export function getUserFromRequest(req: VercelRequest): TokenPayload | null {
-  const authHeader = req.headers.authorization;
+export function getUserFromRequest(req: any): TokenPayload | null {
+  const authHeader = req.headers?.authorization;
   if (!authHeader?.startsWith('Bearer ')) return null;
   const token = authHeader.split(' ')[1];
   try {

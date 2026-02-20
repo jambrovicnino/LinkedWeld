@@ -1,18 +1,16 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getDb } from './_lib/db';
 import { hashPassword, comparePassword } from './_lib/hash';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, getUserFromRequest } from './_lib/auth';
 import { ok, err, handleCors } from './_lib/response';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (handleCors(req, res)) return;
-
-  const pathParam = req.query.path;
-  const segments = Array.isArray(pathParam) ? pathParam : pathParam ? [pathParam] : [];
-  const path = '/' + segments.join('/');
-  const method = req.method || 'GET';
-
+export default async function handler(req: any, res: any) {
   try {
+    if (handleCors(req, res)) return;
+
+    const pathParam = req.query.path;
+    const segments = Array.isArray(pathParam) ? pathParam : pathParam ? [pathParam] : [];
+    const path = '/' + segments.join('/');
+    const method = req.method || 'GET';
     // ──── AUTH ────
     if (path === '/auth/register' && method === 'POST') return await handleRegister(req, res);
     if (path === '/auth/login' && method === 'POST') return await handleLogin(req, res);
@@ -60,14 +58,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return err(res, `Not found: ${method} /api${path}`, 404);
   } catch (e: any) {
-    console.error('API error:', e);
-    return err(res, e.message || 'Internal server error', 500);
+    console.error('API error:', e?.stack || e?.message || e);
+    return res.status(500).json({ success: false, error: String(e?.message || 'Internal server error') });
   }
 }
 
 // ──────────── AUTH ────────────
 
-async function handleRegister(req: VercelRequest, res: VercelResponse) {
+async function handleRegister(req: any, res: any) {
   const { email, password, firstName, lastName, role, phone, companyName } = req.body;
   if (!email || !password || !firstName || !lastName || !role) return err(res, 'Missing required fields');
 
@@ -108,7 +106,7 @@ async function handleRegister(req: VercelRequest, res: VercelResponse) {
   return ok(res, { user: safeUser, tokens: { accessToken, refreshToken }, verificationCode: verification_code }, 201);
 }
 
-async function handleLogin(req: VercelRequest, res: VercelResponse) {
+async function handleLogin(req: any, res: any) {
   const { email, password } = req.body;
   if (!email || !password) return err(res, 'Email and password are required');
 
@@ -134,7 +132,7 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
   return ok(res, { user: safeUser, tokens: { accessToken, refreshToken } });
 }
 
-async function handleVerify(req: VercelRequest, res: VercelResponse) {
+async function handleVerify(req: any, res: any) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
 
@@ -155,7 +153,7 @@ async function handleVerify(req: VercelRequest, res: VercelResponse) {
   return ok(res, { message: 'Email verified successfully', isVerified: true });
 }
 
-async function handleMe(req: VercelRequest, res: VercelResponse, method: string) {
+async function handleMe(req: any, res: any, method: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   const db = getDb();
@@ -185,7 +183,7 @@ async function handleMe(req: VercelRequest, res: VercelResponse, method: string)
   return err(res, 'Method not allowed', 405);
 }
 
-async function handleRefresh(req: VercelRequest, res: VercelResponse) {
+async function handleRefresh(req: any, res: any) {
   const { refreshToken } = req.body;
   if (!refreshToken) return err(res, 'Refresh token required', 401);
   try {
@@ -203,7 +201,7 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-async function handleLogout(req: VercelRequest, res: VercelResponse) {
+async function handleLogout(req: any, res: any) {
   const { refreshToken } = req.body;
   if (refreshToken) { const db = getDb(); db.remove('refresh_tokens', (t) => t.token === refreshToken); }
   return ok(res, { message: 'Logged out' });
@@ -211,7 +209,7 @@ async function handleLogout(req: VercelRequest, res: VercelResponse) {
 
 // ──────────── PROJECTS ────────────
 
-async function handleProjects(req: VercelRequest, res: VercelResponse, method: string) {
+async function handleProjects(req: any, res: any, method: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   const db = getDb();
@@ -238,7 +236,7 @@ async function handleProjects(req: VercelRequest, res: VercelResponse, method: s
   return err(res, 'Method not allowed', 405);
 }
 
-async function handleProjectById(req: VercelRequest, res: VercelResponse, method: string, id: string) {
+async function handleProjectById(req: any, res: any, method: string, id: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   const db = getDb();
@@ -273,7 +271,7 @@ async function handleProjectById(req: VercelRequest, res: VercelResponse, method
 
 // ──────────── WORKERS ────────────
 
-async function handleWorkers(req: VercelRequest, res: VercelResponse) {
+async function handleWorkers(req: any, res: any) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   if (req.method !== 'GET') return err(res, 'Method not allowed', 405);
@@ -286,7 +284,7 @@ async function handleWorkers(req: VercelRequest, res: VercelResponse) {
   return ok(res, result);
 }
 
-async function handleWorkerById(req: VercelRequest, res: VercelResponse, id: string) {
+async function handleWorkerById(req: any, res: any, id: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   const db = getDb();
@@ -296,7 +294,7 @@ async function handleWorkerById(req: VercelRequest, res: VercelResponse, id: str
   return ok(res, { id: u.id, firstName: u.first_name, lastName: u.last_name, email: u.email, ...wp });
 }
 
-async function handleCheckIn(req: VercelRequest, res: VercelResponse) {
+async function handleCheckIn(req: any, res: any) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   const db = getDb();
@@ -305,7 +303,7 @@ async function handleCheckIn(req: VercelRequest, res: VercelResponse) {
   return ok(res, { id: result.lastInsertRowid }, 201);
 }
 
-async function handleCheckOut(req: VercelRequest, res: VercelResponse) {
+async function handleCheckOut(req: any, res: any) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   const db = getDb();
@@ -320,7 +318,7 @@ async function handleCheckOut(req: VercelRequest, res: VercelResponse) {
 
 // ──────────── EXPENSES ────────────
 
-async function handleExpenses(req: VercelRequest, res: VercelResponse, method: string) {
+async function handleExpenses(req: any, res: any, method: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   const db = getDb();
@@ -343,11 +341,11 @@ async function handleExpenses(req: VercelRequest, res: VercelResponse, method: s
   return err(res, 'Method not allowed', 405);
 }
 
-async function handleExpenseCategories(res: VercelResponse) {
+async function handleExpenseCategories(res: any) {
   return ok(res, getDb().findAll('expense_categories'));
 }
 
-async function handleExpenseById(req: VercelRequest, res: VercelResponse, method: string, id: string) {
+async function handleExpenseById(req: any, res: any, method: string, id: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   const db = getDb();
@@ -370,7 +368,7 @@ async function handleExpenseById(req: VercelRequest, res: VercelResponse, method
 
 // ──────────── DOCUMENTS ────────────
 
-async function handleDocuments(req: VercelRequest, res: VercelResponse, method: string) {
+async function handleDocuments(req: any, res: any, method: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   const db = getDb();
@@ -388,7 +386,7 @@ async function handleDocuments(req: VercelRequest, res: VercelResponse, method: 
   return err(res, 'Method not allowed', 405);
 }
 
-async function handleDocumentDelete(req: VercelRequest, res: VercelResponse, id: string) {
+async function handleDocumentDelete(req: any, res: any, id: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   getDb().remove('documents', (d) => d.id === parseInt(id) && d.user_id === auth.userId);
@@ -397,26 +395,26 @@ async function handleDocumentDelete(req: VercelRequest, res: VercelResponse, id:
 
 // ──────────── NOTIFICATIONS ────────────
 
-async function handleNotifications(req: VercelRequest, res: VercelResponse) {
+async function handleNotifications(req: any, res: any) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   return ok(res, getDb().findAll('notifications', (n) => n.user_id === auth.userId).sort((a: any, b: any) => (b.created_at || '').localeCompare(a.created_at || '')).slice(0, 50));
 }
 
-async function handleUnreadCount(req: VercelRequest, res: VercelResponse) {
+async function handleUnreadCount(req: any, res: any) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   return ok(res, { count: getDb().count('notifications', (n) => n.user_id === auth.userId && !n.is_read) });
 }
 
-async function handleReadAll(req: VercelRequest, res: VercelResponse) {
+async function handleReadAll(req: any, res: any) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   getDb().update('notifications', (n) => n.user_id === auth.userId, { is_read: 1 });
   return ok(res, { message: 'All marked as read' });
 }
 
-async function handleNotificationById(req: VercelRequest, res: VercelResponse, method: string, id: string) {
+async function handleNotificationById(req: any, res: any, method: string, id: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   const db = getDb();
@@ -428,7 +426,7 @@ async function handleNotificationById(req: VercelRequest, res: VercelResponse, m
 
 // ──────────── REPORTS ────────────
 
-async function handleDashboardSummary(req: VercelRequest, res: VercelResponse) {
+async function handleDashboardSummary(req: any, res: any) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   const db = getDb();
@@ -444,14 +442,14 @@ async function handleDashboardSummary(req: VercelRequest, res: VercelResponse) {
 
 // ──────────── ADMIN ────────────
 
-async function handleAdminStats(req: VercelRequest, res: VercelResponse) {
+async function handleAdminStats(req: any, res: any) {
   const auth = getUserFromRequest(req);
   if (!auth || auth.role !== 'admin') return err(res, 'Admin access required', 403);
   const db = getDb();
   return ok(res, { totalUsers: db.count('users'), activeProjects: db.count('projects', (p) => p.status !== 'cancelled'), companies: db.countDistinct('users', 'company_name', (u) => !!u.company_name) });
 }
 
-async function handleAdminUsers(req: VercelRequest, res: VercelResponse, method: string) {
+async function handleAdminUsers(req: any, res: any, method: string) {
   const auth = getUserFromRequest(req);
   if (!auth || auth.role !== 'admin') return err(res, 'Admin access required', 403);
   const db = getDb();
