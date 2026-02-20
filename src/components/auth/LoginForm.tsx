@@ -31,7 +31,8 @@ export function LoginForm() {
       await login(data);
       navigate(ROUTES.DASHBOARD);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Login failed. Please try again.');
+      const msg = err.response?.data?.error;
+      setError(typeof msg === 'string' ? msg : msg?.message || 'Login failed. Please try again.');
     }
   };
 
