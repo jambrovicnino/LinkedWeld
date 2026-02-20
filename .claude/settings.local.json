@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"Get-Content ''C:\\\\Users\\\\Uporabnik\\\\Desktop\\\\LinkedWeld\\\\package.json''\")",
+      "Bash(powershell -Command:*)",
+      "Bash(dir:*)",
+      "Bash(echo:*)",
+      "Bash(powershell -File:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
