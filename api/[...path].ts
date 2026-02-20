@@ -7,10 +7,21 @@ export default async function handler(req: any, res: any) {
   try {
     if (handleCors(req, res)) return;
 
+    // Extract path from query param (Vercel catch-all) or from URL as fallback
     const pathParam = req.query.path;
-    const segments = Array.isArray(pathParam) ? pathParam : pathParam ? [pathParam] : [];
+    let segments: string[];
+    if (pathParam && (Array.isArray(pathParam) ? pathParam.length > 0 : true)) {
+      segments = Array.isArray(pathParam) ? pathParam : [pathParam];
+    } else {
+      // Fallback: extract from URL (e.g., /api/auth/register → auth/register)
+      const url = (req.url || '').split('?')[0];
+      const stripped = url.replace(/^\/api\/?/, '');
+      segments = stripped ? stripped.split('/') : [];
+    }
     const path = '/' + segments.join('/');
     const method = req.method || 'GET';
+
+    console.log('API request:', method, path, 'url:', req.url, 'query.path:', pathParam);
     // ──── AUTH ────
     if (path === '/auth/register' && method === 'POST') return await handleRegister(req, res);
     if (path === '/auth/login' && method === 'POST') return await handleLogin(req, res);
