@@ -36,7 +36,7 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
   },
 
   markAsRead: async (id) => {
-    await api.put(`/notifications/${id}/read`);
+    await api.put(`/notifications/${id}`);
     set((s) => ({
       notifications: s.notifications.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
       unreadCount: Math.max(0, s.unreadCount - 1),

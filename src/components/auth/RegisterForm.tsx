@@ -40,7 +40,7 @@ export function RegisterForm() {
     try {
       const { confirmPassword, ...payload } = data;
       await registerUser(payload);
-      navigate(ROUTES.DASHBOARD);
+      navigate('/verify');
     } catch (err: any) {
       const resp = err.response?.data;
       const msg = typeof resp?.error === 'string' ? resp.error

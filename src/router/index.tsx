@@ -1,11 +1,13 @@
-﻿import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ProtectedRoute, PublicOnlyRoute } from './guards';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 
+import { LandingPage } from '@/pages/LandingPage';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { RegisterPage } from '@/pages/auth/RegisterPage';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
+import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ProjectsListPage } from '@/pages/projects/ProjectsListPage';
 import { ProjectDetailPage } from '@/pages/projects/ProjectDetailPage';
@@ -38,7 +40,7 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to='/dashboard' replace />,
+    element: <LandingPage />,
   },
   {
     element: <PublicOnlyRoute><AuthLayout /></PublicOnlyRoute>,
@@ -47,6 +49,10 @@ export const router = createBrowserRouter([
       { path: '/register', element: <RegisterPage /> },
       { path: '/forgot-password', element: <ForgotPasswordPage /> },
     ],
+  },
+  {
+    path: '/verify',
+    element: <VerifyEmailPage />,
   },
   {
     element: <ProtectedRoute><AppLayout /></ProtectedRoute>,

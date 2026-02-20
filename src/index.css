@@ -4,26 +4,30 @@
 
 @layer base {
   :root {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 14%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 14%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 221 62% 45%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217 33% 20%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 20%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 25 95% 53%;
-    --accent-foreground: 210 40% 98%;
+    --background: 210 40% 96%;
+    --foreground: 220 20% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 20%;
+    --primary: 207 90% 54%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 30% 93%;
+    --secondary-foreground: 220 20% 30%;
+    --muted: 210 25% 92%;
+    --muted-foreground: 220 10% 50%;
+    --accent: 207 90% 54%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 25%;
-    --input: 217 33% 25%;
-    --ring: 221 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 20% 88%;
+    --input: 210 20% 88%;
+    --ring: 207 90% 54%;
     --radius: 0.5rem;
+
+    /* sidebar */
+    --sidebar-bg-from: 207 90% 54%;
+    --sidebar-bg-to: 210 80% 42%;
   }
 }
 
@@ -38,24 +42,29 @@
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(222 47% 11%);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(217 33% 25%);
+  background: hsl(210 20% 80%);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(217 33% 35%);
+  background: hsl(210 20% 70%);
 }
 
 /* Smooth transitions */
 .transition-sidebar {
   transition: width 0.3s ease, margin-left 0.3s ease;
+}
+
+/* Blue gradient sidebar */
+.sidebar-gradient {
+  background: linear-gradient(180deg, hsl(207 90% 54%) 0%, hsl(210 80% 42%) 100%);
 }

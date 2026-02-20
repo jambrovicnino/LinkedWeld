@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { User, AuthTokens, LoginPayload, RegisterPayload } from '@/types';
+import type { User, LoginPayload, RegisterPayload } from '@/types';
 import api from '@/lib/api';
 
 interface AuthState {
@@ -8,9 +8,12 @@ interface AuthState {
   token: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
+  isVerified: boolean;
   isLoading: boolean;
+  verificationCode: string | null;
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
+  verifyEmail: (code: string) => Promise<void>;
   logout: () => void;
   refreshAuth: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
@@ -24,7 +27,9 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       refreshToken: null,
       isAuthenticated: false,
+      isVerified: false,
       isLoading: false,
+      verificationCode: null,
 
       login: async (payload) => {
         set({ isLoading: true });
@@ -36,7 +41,9 @@ export const useAuthStore = create<AuthState>()(
             token: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             isAuthenticated: true,
+            isVerified: !!user.isVerified,
             isLoading: false,
+            verificationCode: null,
           });
         } catch (error) {
           set({ isLoading: false });
@@ -48,14 +55,27 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           const { data } = await api.post('/auth/register', payload);
-          const { user, tokens } = data.data;
+          const { user, tokens, verificationCode } = data.data;
           set({
             user,
             token: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             isAuthenticated: true,
+            isVerified: false,
             isLoading: false,
+            verificationCode: verificationCode || null,
           });
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
+        }
+      },
+
+      verifyEmail: async (code: string) => {
+        set({ isLoading: true });
+        try {
+          await api.post('/auth/verify', { code });
+          set({ isVerified: true, isLoading: false, verificationCode: null });
         } catch (error) {
           set({ isLoading: false });
           throw error;
@@ -70,6 +90,8 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           refreshToken: null,
           isAuthenticated: false,
+          isVerified: false,
+          verificationCode: null,
         });
       },
 
@@ -95,6 +117,7 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
+        isVerified: state.isVerified,
       }),
     }
   )
