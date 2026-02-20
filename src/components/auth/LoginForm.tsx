@@ -31,8 +31,12 @@ export function LoginForm() {
       await login(data);
       navigate(ROUTES.DASHBOARD);
     } catch (err: any) {
-      const msg = err.response?.data?.error;
-      setError(typeof msg === 'string' ? msg : msg?.message || 'Login failed. Please try again.');
+      const resp = err.response?.data;
+      const msg = typeof resp?.error === 'string' ? resp.error
+        : typeof resp?.message === 'string' ? resp.message
+        : typeof err.message === 'string' ? err.message
+        : 'Login failed. Please try again.';
+      setError(msg);
     }
   };
 

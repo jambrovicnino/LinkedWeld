@@ -42,8 +42,12 @@ export function RegisterForm() {
       await registerUser(payload);
       navigate(ROUTES.DASHBOARD);
     } catch (err: any) {
-      const msg = err.response?.data?.error;
-      setError(typeof msg === 'string' ? msg : msg?.message || 'Registration failed.');
+      const resp = err.response?.data;
+      const msg = typeof resp?.error === 'string' ? resp.error
+        : typeof resp?.message === 'string' ? resp.message
+        : typeof err.message === 'string' ? err.message
+        : 'Registration failed.';
+      setError(msg);
     }
   };
 
