@@ -1,37 +1,103 @@
-﻿import { useParams, useNavigate } from 'react-router-dom';
-import { PageHeader } from '@/components/common/PageHeader';
-import { Card, CardContent } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ROUTES } from '@/router/routes';
-import { ArrowLeft, Save } from 'lucide-react';
+import { PROJECT_PHASES, EU_COUNTRIES } from '@/lib/constants';
+import { ArrowLeft } from 'lucide-react';
+import api from '@/lib/api';
+import type { Project } from '@/types';
 
 export function ProjectEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [saving, setSaving] = useState(false);
+  const [project, setProject] = useState<Project | null>(null);
+
+  useEffect(() => {
+    api.get(`/projects/${id}`).then(r => setProject(r.data.data)).catch(() => navigate(ROUTES.PROJECTS));
+  }, [id]);
+
+  const handleSave = async () => {
+    if (!project) return;
+    setSaving(true);
+    try {
+      await api.put(`/projects/${id}`, project);
+      navigate(ROUTES.PROJECT_DETAIL(id || ''));
+    } catch {} finally { setSaving(false); }
+  };
+
+  if (!project) return <div className='text-center py-12 text-gray-400'>Loading...</div>;
+
+  const set = (key: string, val: any) => setProject(p => p ? { ...p, [key]: val } : p);
+
   return (
-    <div className='space-y-6'>
-      <div className='flex items-center gap-4'>
-        <Button variant='ghost' size='icon' onClick={() => navigate(ROUTES.PROJECT_DETAIL(id || '1'))}><ArrowLeft className='h-5 w-5' /></Button>
-        <PageHeader title='Edit Project' description='Update project details' />
-      </div>
-      <Card><CardContent className='p-6 space-y-4'>
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-          <div className='space-y-2'><Label>Project Title</Label><Input defaultValue='Shipyard Phase 2' /></div>
-          <div className='space-y-2'><Label>Location</Label><Input defaultValue='Rotterdam Port' /></div>
-          <div className='space-y-2'><Label>Status</Label><Select defaultValue='in_progress'><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value='draft'>Draft</SelectItem><SelectItem value='open'>Open</SelectItem><SelectItem value='in_progress'>In Progress</SelectItem><SelectItem value='on_hold'>On Hold</SelectItem><SelectItem value='completed'>Completed</SelectItem></SelectContent></Select></div>
-          <div className='space-y-2'><Label>Priority</Label><Select defaultValue='high'><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value='low'>Low</SelectItem><SelectItem value='medium'>Medium</SelectItem><SelectItem value='high'>High</SelectItem><SelectItem value='urgent'>Urgent</SelectItem></SelectContent></Select></div>
-          <div className='space-y-2'><Label>Start Date</Label><Input type='date' defaultValue='2026-01-15' /></div>
-          <div className='space-y-2'><Label>End Date</Label><Input type='date' defaultValue='2026-04-30' /></div>
-          <div className='space-y-2'><Label>Budget (EUR)</Label><Input type='number' defaultValue='45000' /></div>
-          <div className='space-y-2'><Label>Progress (%)</Label><Input type='number' defaultValue='75' min='0' max='100' /></div>
-        </div>
-        <div className='space-y-2'><Label>Description</Label><Textarea defaultValue='Phase 2 of the Rotterdam shipyard welding project.' rows={4} /></div>
-        <div className='flex justify-end gap-3'><Button variant='outline' onClick={() => navigate(ROUTES.PROJECT_DETAIL(id || '1'))}>Cancel</Button><Button variant='accent'><Save className='mr-2 h-4 w-4' /> Save Changes</Button></div>
-      </CardContent></Card>
+    <div className='space-y-6 max-w-2xl'>
+      <Button variant='ghost' size='sm' onClick={() => navigate(ROUTES.PROJECT_DETAIL(id || ''))}>
+        <ArrowLeft className='h-4 w-4 mr-1' /> Back
+      </Button>
+      <h1 className='text-2xl font-bold text-gray-800'>Edit Project</h1>
+
+      <Card className='shadow-sm'>
+        <CardHeader><CardTitle>Project Details</CardTitle></CardHeader>
+        <CardContent className='space-y-4'>
+          <div className='grid grid-cols-2 gap-3'>
+            <div><Label>Name</Label><Input value={project.name || ''} onChange={e => set('name', e.target.value)} /></div>
+            <div><Label>Client</Label><Input value={project.client || ''} onChange={e => set('client', e.target.value)} /></div>
+          </div>
+          <div className='grid grid-cols-2 gap-3'>
+            <div><Label>Location</Label><Input value={project.location || ''} onChange={e => set('location', e.target.value)} /></div>
+            <div><Label>Country</Label>
+              <Select value={project.country || 'Slovenia'} onValueChange={v => set('country', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{EU_COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className='grid grid-cols-2 gap-3'>
+            <div><Label>Phase</Label>
+              <Select value={project.phase || 'mobilization'} onValueChange={v => set('phase', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{PROJECT_PHASES.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label>Progress (%)</Label><Input type='number' min='0' max='100' value={project.progress || 0} onChange={e => set('progress', parseInt(e.target.value) || 0)} /></div>
+          </div>
+          <div className='grid grid-cols-2 gap-3'>
+            <div><Label>Start Date</Label><Input type='date' value={project.start_date || ''} onChange={e => set('start_date', e.target.value)} /></div>
+            <div><Label>Expected End Date</Label><Input type='date' value={project.expected_end_date || ''} onChange={e => set('expected_end_date', e.target.value)} /></div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className='shadow-sm'>
+        <CardHeader><CardTitle>Budget (EUR)</CardTitle></CardHeader>
+        <CardContent>
+          <div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
+            <div><Label>Labor</Label><Input type='number' value={project.budget_labor || 0} onChange={e => set('budget_labor', parseFloat(e.target.value) || 0)} /></div>
+            <div><Label>Transport</Label><Input type='number' value={project.budget_transport || 0} onChange={e => set('budget_transport', parseFloat(e.target.value) || 0)} /></div>
+            <div><Label>Accommodation</Label><Input type='number' value={project.budget_accommodation || 0} onChange={e => set('budget_accommodation', parseFloat(e.target.value) || 0)} /></div>
+            <div><Label>Tools</Label><Input type='number' value={project.budget_tools || 0} onChange={e => set('budget_tools', parseFloat(e.target.value) || 0)} /></div>
+            <div><Label>Per Diem</Label><Input type='number' value={project.budget_per_diem || 0} onChange={e => set('budget_per_diem', parseFloat(e.target.value) || 0)} /></div>
+            <div><Label>Other</Label><Input type='number' value={project.budget_other || 0} onChange={e => set('budget_other', parseFloat(e.target.value) || 0)} /></div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className='shadow-sm'>
+        <CardContent className='p-6'>
+          <Label>Notes</Label>
+          <Textarea className='mt-2' rows={4} value={project.notes || ''} onChange={e => set('notes', e.target.value)} />
+        </CardContent>
+      </Card>
+
+      <Button className='w-full' onClick={handleSave} disabled={saving}>
+        {saving ? 'Saving...' : 'Save Changes'}
+      </Button>
     </div>
   );
 }

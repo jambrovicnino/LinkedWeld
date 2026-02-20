@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,7 +19,7 @@ const registerSchema = z.object({
   confirmPassword: z.string(),
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  role: z.enum(['welder', 'subcontractor', 'client', 'accountant'] as const),
+  role: z.enum(['director', 'secretary'] as const),
   phone: z.string().optional(),
   companyName: z.string().optional(),
 }).refine(d => d.password === d.confirmPassword, { message: 'Passwords do not match', path: ['confirmPassword'] });
@@ -29,10 +29,10 @@ export function RegisterForm() {
   const { register: registerUser, isLoading } = useAuthStore();
   const navigate = useNavigate();
   const [error, setError] = useState('');
-  const [selectedRole, setSelectedRole] = useState<UserRole>('welder');
+  const [selectedRole, setSelectedRole] = useState<UserRole>('director');
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { role: 'welder' },
+    defaultValues: { role: 'director' },
   });
 
   const onSubmit = async (data: RegisterFormData) => {
@@ -55,7 +55,7 @@ export function RegisterForm() {
     <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
       <div className='space-y-2 text-center'>
         <h2 className='text-2xl font-bold'>Create account</h2>
-        <p className='text-sm text-muted-foreground'>Join the LinkedWeld platform</p>
+        <p className='text-sm text-muted-foreground'>Join LinkedWeld Pro</p>
       </div>
       {error && <Alert variant='destructive'><AlertDescription>{error}</AlertDescription></Alert>}
       <div className='grid grid-cols-2 gap-3'>
@@ -80,19 +80,15 @@ export function RegisterForm() {
         <Select value={selectedRole} onValueChange={(v) => { setSelectedRole(v as UserRole); setValue('role', v as any); }}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value='welder'>Welder / Pipefitter</SelectItem>
-            <SelectItem value='subcontractor'>Subcontractor</SelectItem>
-            <SelectItem value='client'>Client</SelectItem>
-            <SelectItem value='accountant'>Accountant / Director</SelectItem>
+            <SelectItem value='director'>Director</SelectItem>
+            <SelectItem value='secretary'>Secretary</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      {(selectedRole === 'subcontractor' || selectedRole === 'client') && (
-        <div className='space-y-2'>
-          <Label htmlFor='companyName'>Company Name</Label>
-          <Input id='companyName' {...register('companyName')} />
-        </div>
-      )}
+      <div className='space-y-2'>
+        <Label htmlFor='companyName'>Company Name</Label>
+        <Input id='companyName' {...register('companyName')} placeholder='Your company name' />
+      </div>
       <div className='space-y-2'>
         <Label htmlFor='password'>Password</Label>
         <Input id='password' type='password' {...register('password')} />

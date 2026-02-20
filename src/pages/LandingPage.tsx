@@ -8,36 +8,36 @@ import {
 
 const FEATURES = [
   {
-    icon: FolderKanban,
-    title: 'Project Pipeline',
-    desc: 'Track welding projects from bid to completion with real-time status updates and milestone tracking.',
+    icon: Users,
+    title: 'Worker Management',
+    desc: 'Track TRC expirations, welding certificates, and employment documents for every worker in one place.',
     color: 'bg-blue-50 text-blue-500',
   },
   {
-    icon: Users,
-    title: 'Workforce Management',
-    desc: 'Manage welders, certifications, attendance, and assignments across all your active projects.',
+    icon: FolderKanban,
+    title: 'Project Cost Control',
+    desc: 'Budget breakdown per project — labor, transport, accommodation, tools — with real-time tracking.',
     color: 'bg-cyan-50 text-cyan-500',
   },
   {
     icon: Receipt,
-    title: 'Financial Control',
-    desc: 'Expense tracking, approval workflows, and cost analysis to keep every project on budget.',
+    title: 'Expense Management',
+    desc: 'Track all costs by project and worker. Recurring expenses, per diem, fuel, and permits in one view.',
     color: 'bg-sky-50 text-sky-500',
   },
   {
     icon: BarChart3,
-    title: 'Analytics & Reports',
-    desc: 'Revenue trends, worker utilization, project performance — all in real-time dashboards.',
+    title: 'Recruitment Pipeline',
+    desc: 'From first contact to visa approval — track candidates, collect documents, and manage the hiring flow.',
     color: 'bg-indigo-50 text-indigo-500',
   },
 ];
 
 const STATS = [
-  { value: '2,400+', label: 'Active Welders' },
-  { value: '850+', label: 'Projects Delivered' },
-  { value: '120+', label: 'Companies' },
-  { value: '\u20AC45M+', label: 'Revenue Tracked' },
+  { value: '200+', label: 'Workers Managed' },
+  { value: '50+', label: 'EU Projects' },
+  { value: '15+', label: 'Countries' },
+  { value: '100%', label: 'TRC Compliance' },
 ];
 
 const PRICING = [
@@ -118,16 +118,16 @@ export function LandingPage() {
         <div className='relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
           <div className='inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-sm mb-8'>
             <Zap className='h-4 w-4' />
-            <span>The platform built for welding professionals</span>
+            <span>Built for welding subcontractors managing foreign workers in the EU</span>
           </div>
           <h1 className='text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-gray-900'>
-            Every weld{' '}
+            Your welding crew,{' '}
             <span className='text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500'>
-              starts here.
+              fully managed.
             </span>
           </h1>
           <p className='mt-6 text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed'>
-            Manage your welding workforce, track projects, control expenses, and grow your business — all in one platform designed for the welding industry.
+            TRC tracking, document vault, project budgets, expense control, and recruitment pipeline — everything a welding subcontractor needs in one tool.
           </p>
           <div className='mt-10 flex flex-col sm:flex-row items-center justify-center gap-4'>
             <Link to={ROUTES.REGISTER}>
@@ -187,31 +187,31 @@ export function LandingPage() {
       {/* Trust / Social proof */}
       <section id='about' className='py-20 border-y border-gray-100 bg-gray-50'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
-          <h2 className='text-3xl sm:text-4xl font-bold text-gray-900 mb-6'>Trusted by welding companies across Europe</h2>
+          <h2 className='text-3xl sm:text-4xl font-bold text-gray-900 mb-6'>Built for the real challenges of welding subcontractors</h2>
           <p className='text-gray-500 max-w-2xl mx-auto mb-12'>
-            From independent welders in Slovenia to large-scale industrial operations in Germany — LinkedWeld powers the workforce behind critical infrastructure.
+            Managing foreign workers across EU countries means tracking TRCs, welding certs, A1 forms, and project budgets — we handle all of it.
           </p>
           <div className='grid grid-cols-1 sm:grid-cols-3 gap-8'>
             <div className='p-6 rounded-xl bg-white border border-gray-100 shadow-sm'>
               <div className='h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center mx-auto mb-3'>
                 <Globe className='h-6 w-6 text-blue-500' />
               </div>
-              <h4 className='font-semibold text-lg text-gray-800 mb-1'>Multi-Country</h4>
-              <p className='text-sm text-gray-500'>Manage teams posted across EU countries with compliance tracking.</p>
+              <h4 className='font-semibold text-lg text-gray-800 mb-1'>Multi-Country TRC</h4>
+              <p className='text-sm text-gray-500'>Track temporary residence cards across EU countries with automatic expiry alerts.</p>
             </div>
             <div className='p-6 rounded-xl bg-white border border-gray-100 shadow-sm'>
               <div className='h-12 w-12 rounded-xl bg-cyan-50 flex items-center justify-center mx-auto mb-3'>
                 <Shield className='h-6 w-6 text-cyan-500' />
               </div>
-              <h4 className='font-semibold text-lg text-gray-800 mb-1'>Certification Tracking</h4>
-              <p className='text-sm text-gray-500'>Track welder certifications, expirations, and renewal deadlines automatically.</p>
+              <h4 className='font-semibold text-lg text-gray-800 mb-1'>Document Vault</h4>
+              <p className='text-sm text-gray-500'>Passports, welding certs, employment contracts, A1 forms — all organized per worker.</p>
             </div>
             <div className='p-6 rounded-xl bg-white border border-gray-100 shadow-sm'>
               <div className='h-12 w-12 rounded-xl bg-sky-50 flex items-center justify-center mx-auto mb-3'>
                 <Clock className='h-6 w-6 text-sky-500' />
               </div>
-              <h4 className='font-semibold text-lg text-gray-800 mb-1'>GPS Check-In</h4>
-              <p className='text-sm text-gray-500'>Mobile time tracking with GPS verification for on-site attendance.</p>
+              <h4 className='font-semibold text-lg text-gray-800 mb-1'>Expiry Alerts</h4>
+              <p className='text-sm text-gray-500'>Never miss a TRC renewal or cert expiration again. Get notified 90, 30, and 7 days before.</p>
             </div>
           </div>
         </div>

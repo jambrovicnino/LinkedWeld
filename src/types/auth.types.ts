@@ -1,5 +1,4 @@
-﻿export type UserRole = 'welder' | 'subcontractor' | 'client' | 'accountant' | 'admin';
-export type SubscriptionTier = 'free' | 'pro' | 'business' | 'enterprise';
+export type UserRole = 'director' | 'secretary';
 
 export interface User {
   id: number;
@@ -8,14 +7,10 @@ export interface User {
   lastName: string;
   role: UserRole;
   phone?: string;
-  avatarUrl?: string;
   companyName?: string;
   isActive: boolean;
-  emailVerified: boolean;
-  subscriptionTier: SubscriptionTier;
-  lastLoginAt?: string;
+  isVerified: boolean;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface LoginPayload {

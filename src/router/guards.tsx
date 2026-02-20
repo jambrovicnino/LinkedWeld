@@ -1,14 +1,12 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
-import type { UserRole } from '@/types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: UserRole[];
 }
 
-export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { isAuthenticated, isVerified, user } = useAuthStore();
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { isAuthenticated, isVerified } = useAuthStore();
   const location = useLocation();
 
   if (!isAuthenticated) {
@@ -17,10 +15,6 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 
   if (!isVerified && location.pathname !== '/verify') {
     return <Navigate to='/verify' replace />;
-  }
-
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return <Navigate to='/dashboard' replace />;
   }
 
   return <>{children}</>;

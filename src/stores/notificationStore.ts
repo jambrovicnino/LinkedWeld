@@ -1,9 +1,18 @@
 import { create } from 'zustand';
-import type { Notification } from '@/types';
 import api from '@/lib/api';
 
+interface AppNotification {
+  id: number;
+  userId: number;
+  title: string;
+  message: string;
+  type: string;
+  isRead: boolean;
+  created_at: string;
+}
+
 interface NotificationState {
-  notifications: Notification[];
+  notifications: AppNotification[];
   unreadCount: number;
   isLoading: boolean;
   fetchNotifications: () => Promise<void>;

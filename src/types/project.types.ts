@@ -1,63 +1,44 @@
-﻿export type ProjectStatus = 'draft' | 'open' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled';
-export type ProjectPriority = 'low' | 'medium' | 'high' | 'urgent';
-export type AssignmentStatus = 'pending' | 'accepted' | 'declined' | 'active' | 'completed';
+export type ProjectPhase = 'mobilization' | 'active' | 'finishing' | 'completed';
+export type BudgetHealth = 'ok' | 'warning' | 'danger';
 
 export interface Project {
   id: number;
-  title: string;
-  description?: string;
-  clientId?: number;
-  subcontractorId?: number;
-  status: ProjectStatus;
-  priority: ProjectPriority;
-  budget?: number;
-  currency: string;
-  location?: string;
-  latitude?: number;
-  longitude?: number;
-  startDate?: string;
-  endDate?: string;
-  actualEndDate?: string;
+  name: string;
+  client: string;
+  location: string;
+  country: string;
+  phase: ProjectPhase;
+  start_date: string;
+  expected_end_date: string;
   progress: number;
-  createdAt: string;
-  updatedAt: string;
-  clientName?: string;
-  subcontractorName?: string;
-  assignmentCount?: number;
+  budget_labor: number;
+  budget_transport: number;
+  budget_accommodation: number;
+  budget_tools: number;
+  budget_per_diem: number;
+  budget_other: number;
+  actual_labor: number;
+  actual_transport: number;
+  actual_accommodation: number;
+  actual_tools: number;
+  actual_per_diem: number;
+  actual_other: number;
+  notes: string;
+  workerCount?: number;
+  totalBudget?: number;
+  totalActual?: number;
+  budgetHealth?: BudgetHealth;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface ProjectAssignment {
+export interface ProjectWorker {
   id: number;
-  projectId: number;
-  workerId: number;
-  roleOnProject: string;
-  hourlyRate?: number;
-  status: AssignmentStatus;
-  assignedAt: string;
+  project_id: number;
+  worker_id: number;
+  assigned_date: string;
+  removed_date: string | null;
   workerName?: string;
-  workerTrade?: string;
-}
-
-export interface ProjectMilestone {
-  id: number;
-  projectId: number;
-  title: string;
-  description?: string;
-  dueDate?: string;
-  completed: boolean;
-  completedAt?: string;
-  sortOrder: number;
-  createdAt: string;
-}
-
-export interface ProjectFormData {
-  title: string;
-  description?: string;
-  status: ProjectStatus;
-  priority: ProjectPriority;
-  budget?: number;
-  currency: string;
-  location?: string;
-  startDate?: string;
-  endDate?: string;
+  nationality?: string;
+  weldingTypes?: string[];
 }

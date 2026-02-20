@@ -2,11 +2,11 @@ import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Menu, Search, LogOut, Settings, User } from 'lucide-react';
+import { Bell, Menu, Search, LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -47,7 +47,6 @@ export function Topbar() {
           <DropdownMenuTrigger asChild>
             <Button variant='ghost' className='relative h-9 w-9 rounded-full'>
               <Avatar className='h-9 w-9'>
-                <AvatarImage src={user?.avatarUrl} alt={user?.firstName} />
                 <AvatarFallback className='bg-blue-500 text-white text-xs font-semibold'>
                   {user ? getInitials(user.firstName, user.lastName) : '??'}
                 </AvatarFallback>
@@ -65,9 +64,6 @@ export function Topbar() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate(ROUTES.SETTINGS)}>
               <Settings className='mr-2 h-4 w-4' /><span>Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate(ROUTES.WORKER_PROFILE)}>
-              <User className='mr-2 h-4 w-4' /><span>Profile</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => { logout(); navigate(ROUTES.LOGIN); }}>

@@ -1,56 +1,50 @@
-﻿export type Trade = 'welder' | 'pipefitter' | 'boilermaker' | 'ironworker' | 'sheet_metal' | 'other';
-export type Availability = 'available' | 'busy' | 'unavailable';
-export type CertStatus = 'active' | 'expired' | 'revoked' | 'pending_renewal';
+export type WorkerStatus = 'active' | 'inactive' | 'on_leave';
+export type WeldingType = 'TIG' | 'MIG' | 'Stick' | 'Flux-Cored' | 'SAW' | 'Other';
+export type DocType = 'trc' | 'welding_cert' | 'passport' | 'employment_contract' | 'medical_cert' | 'safety_training' | 'a1_form';
+export type ValidityStatus = 'valid' | 'expiring_soon' | 'expired' | 'missing';
 
-export interface WorkerProfile {
+export interface Worker {
   id: number;
-  userId: number;
-  trade: Trade;
-  experienceYears?: number;
-  hourlyRate?: number;
-  bio?: string;
-  skills: string[];
-  availability: Availability;
-  location?: string;
-  latitude?: number;
-  longitude?: number;
-  createdAt: string;
-  updatedAt: string;
-  user?: { firstName: string; lastName: string; email: string; avatarUrl?: string };
+  first_name: string;
+  last_name: string;
+  nationality: string;
+  phone: string;
+  email: string;
+  hourly_rate: number;
+  welding_types: WeldingType[];
+  current_project_id: number | null;
+  currentProjectName?: string | null;
+  status: WorkerStatus;
+  employment_start_date: string;
+  notes: string;
+  trcExpiryDate?: string | null;
+  trcDaysLeft?: number | null;
+  docCount?: number;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface Certification {
+export interface WorkerDocument {
   id: number;
-  workerId: number;
-  name: string;
-  issuingBody?: string;
-  certificateNumber?: string;
-  issueDate?: string;
-  expiryDate?: string;
-  documentId?: number;
-  status: CertStatus;
-  createdAt: string;
-}
-
-export interface AttendanceRecord {
-  id: number;
-  workerId: number;
-  projectId?: number;
-  checkIn: string;
-  checkOut?: string;
-  checkInLat?: number;
-  checkInLng?: number;
-  checkOutLat?: number;
-  checkOutLng?: number;
-  hoursWorked?: number;
+  worker_id: number;
+  doc_type: DocType;
+  trc_country?: string;
+  trc_number?: string;
+  trc_renewal_status?: string;
+  welding_scope?: string;
+  has_tuv?: number;
+  pcc_status?: string;
+  a1_country?: string;
+  issue_date?: string;
+  expiry_date?: string;
+  file_name?: string;
+  upload_status?: string;
+  validity_status: ValidityStatus;
   notes?: string;
-  createdAt: string;
-  projectTitle?: string;
+  created_at: string;
 }
 
-export interface CheckInPayload {
-  projectId?: number;
-  latitude: number;
-  longitude: number;
-  notes?: string;
+export interface WorkerDetail extends Worker {
+  documents: WorkerDocument[];
+  assignments: any[];
 }
