@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getDb } from '../_lib/db.js';
-import { hashPassword } from '../_lib/hash.js';
-import { generateAccessToken, generateRefreshToken } from '../_lib/auth.js';
-import { ok, err, handleCors } from '../_lib/response.js';
+import { getDb } from '../_lib/db';
+import { hashPassword } from '../_lib/hash';
+import { generateAccessToken, generateRefreshToken } from '../_lib/auth';
+import { ok, err, handleCors } from '../_lib/response';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;
