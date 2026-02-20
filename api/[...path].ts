@@ -7,179 +7,128 @@ import { ok, err, handleCors } from './_lib/response';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;
 
-  // Parse the path from the catch-all parameter
   const pathParam = req.query.path;
   const segments = Array.isArray(pathParam) ? pathParam : pathParam ? [pathParam] : [];
   const path = '/' + segments.join('/');
   const method = req.method || 'GET';
 
   try {
-    // ──── AUTH ROUTES ────
-    if (path === '/auth/register' && method === 'POST') {
-      return await handleRegister(req, res);
-    }
-    if (path === '/auth/login' && method === 'POST') {
-      return await handleLogin(req, res);
-    }
-    if (path === '/auth/verify' && method === 'POST') {
-      return await handleVerify(req, res);
-    }
-    if (path === '/auth/me') {
-      return await handleMe(req, res, method);
-    }
-    if (path === '/auth/refresh' && method === 'POST') {
-      return await handleRefresh(req, res);
-    }
-    if (path === '/auth/logout' && method === 'POST') {
-      return await handleLogout(req, res);
-    }
+    // ──── AUTH ────
+    if (path === '/auth/register' && method === 'POST') return await handleRegister(req, res);
+    if (path === '/auth/login' && method === 'POST') return await handleLogin(req, res);
+    if (path === '/auth/verify' && method === 'POST') return await handleVerify(req, res);
+    if (path === '/auth/me') return await handleMe(req, res, method);
+    if (path === '/auth/refresh' && method === 'POST') return await handleRefresh(req, res);
+    if (path === '/auth/logout' && method === 'POST') return await handleLogout(req, res);
 
-    // ──── PROJECT ROUTES ────
-    if (path === '/projects') {
-      return await handleProjects(req, res, method);
-    }
-    if (path.match(/^\/projects\/\d+$/)) {
-      const id = path.split('/')[2];
-      return await handleProjectById(req, res, method, id);
-    }
+    // ──── PROJECTS ────
+    if (path === '/projects') return await handleProjects(req, res, method);
+    const projectMatch = path.match(/^\/projects\/(\d+)$/);
+    if (projectMatch) return await handleProjectById(req, res, method, projectMatch[1]);
 
-    // ──── WORKER ROUTES ────
-    if (path === '/workers') {
-      return await handleWorkers(req, res);
-    }
-    if (path === '/workers/check-in' && method === 'POST') {
-      return await handleCheckIn(req, res);
-    }
-    if (path === '/workers/check-out' && method === 'POST') {
-      return await handleCheckOut(req, res);
-    }
-    if (path.match(/^\/workers\/\d+$/)) {
-      const id = path.split('/')[2];
-      return await handleWorkerById(req, res, id);
-    }
+    // ──── WORKERS ────
+    if (path === '/workers') return await handleWorkers(req, res);
+    if (path === '/workers/check-in' && method === 'POST') return await handleCheckIn(req, res);
+    if (path === '/workers/check-out' && method === 'POST') return await handleCheckOut(req, res);
+    const workerMatch = path.match(/^\/workers\/(\d+)$/);
+    if (workerMatch) return await handleWorkerById(req, res, workerMatch[1]);
 
-    // ──── EXPENSE ROUTES ────
-    if (path === '/expenses') {
-      return await handleExpenses(req, res, method);
-    }
-    if (path === '/expenses/categories' && method === 'GET') {
-      return await handleExpenseCategories(req, res);
-    }
-    if (path.match(/^\/expenses\/\d+$/)) {
-      const id = path.split('/')[2];
-      return await handleExpenseById(req, res, method, id);
-    }
+    // ──── EXPENSES ────
+    if (path === '/expenses') return await handleExpenses(req, res, method);
+    if (path === '/expenses/categories') return await handleExpenseCategories(res);
+    const expenseMatch = path.match(/^\/expenses\/(\d+)$/);
+    if (expenseMatch) return await handleExpenseById(req, res, method, expenseMatch[1]);
 
-    // ──── DOCUMENT ROUTES ────
-    if (path === '/documents') {
-      return await handleDocuments(req, res, method);
-    }
-    if (path.match(/^\/documents\/\d+$/) && method === 'DELETE') {
-      const id = path.split('/')[2];
-      return await handleDocumentDelete(req, res, id);
-    }
+    // ──── DOCUMENTS ────
+    if (path === '/documents') return await handleDocuments(req, res, method);
+    const docMatch = path.match(/^\/documents\/(\d+)$/);
+    if (docMatch && method === 'DELETE') return await handleDocumentDelete(req, res, docMatch[1]);
 
-    // ──── NOTIFICATION ROUTES ────
-    if (path === '/notifications') {
-      return await handleNotifications(req, res);
-    }
-    if (path === '/notifications/unread-count' && method === 'GET') {
-      return await handleUnreadCount(req, res);
-    }
-    if (path === '/notifications/read-all' && method === 'PUT') {
-      return await handleReadAll(req, res);
-    }
-    if (path.match(/^\/notifications\/\d+$/)) {
-      const id = path.split('/')[2];
-      return await handleNotificationById(req, res, method, id);
-    }
+    // ──── NOTIFICATIONS ────
+    if (path === '/notifications') return await handleNotifications(req, res);
+    if (path === '/notifications/unread-count') return await handleUnreadCount(req, res);
+    if (path === '/notifications/read-all' && method === 'PUT') return await handleReadAll(req, res);
+    const notifMatch = path.match(/^\/notifications\/(\d+)$/);
+    if (notifMatch) return await handleNotificationById(req, res, method, notifMatch[1]);
 
-    // ──── REPORT ROUTES ────
-    if (path === '/reports/dashboard-summary' && method === 'GET') {
-      return await handleDashboardSummary(req, res);
-    }
+    // ──── REPORTS ────
+    if (path === '/reports/dashboard-summary') return await handleDashboardSummary(req, res);
 
-    // ──── ADMIN ROUTES ────
-    if (path === '/admin/stats' && method === 'GET') {
-      return await handleAdminStats(req, res);
-    }
-    if (path === '/admin/users') {
-      return await handleAdminUsers(req, res, method);
-    }
+    // ──── ADMIN ────
+    if (path === '/admin/stats') return await handleAdminStats(req, res);
+    if (path === '/admin/users') return await handleAdminUsers(req, res, method);
 
-    return err(res, `Route not found: ${method} /api${path}`, 404);
+    return err(res, `Not found: ${method} /api${path}`, 404);
   } catch (e: any) {
     console.error('API error:', e);
     return err(res, e.message || 'Internal server error', 500);
   }
 }
 
-// ──────────────── AUTH HANDLERS ────────────────
+// ──────────── AUTH ────────────
 
 async function handleRegister(req: VercelRequest, res: VercelResponse) {
   const { email, password, firstName, lastName, role, phone, companyName } = req.body;
-  if (!email || !password || !firstName || !lastName || !role) {
-    return err(res, 'Missing required fields');
-  }
+  if (!email || !password || !firstName || !lastName || !role) return err(res, 'Missing required fields');
 
-  const db = await getDb();
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  const db = getDb();
+  const existing = db.findOne('users', (u) => u.email === email);
   if (existing) return err(res, 'Email already registered', 409);
 
-  const passwordHash = await hashPassword(password);
-  const verificationCode = String(Math.floor(100000 + Math.random() * 900000));
-  const verificationExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+  const password_hash = await hashPassword(password);
+  const verification_code = String(Math.floor(100000 + Math.random() * 900000));
+  const verification_expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-  const result = db.prepare(
-    'INSERT INTO users (email, password_hash, first_name, last_name, role, phone, company_name, verification_code, verification_expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-  ).run(email, passwordHash, firstName, lastName, role, phone || null, companyName || null, verificationCode, verificationExpires);
+  const result = db.insert('users', {
+    email, password_hash, first_name: firstName, last_name: lastName, role,
+    phone: phone || null, company_name: companyName || null,
+    verification_code, verification_expires_at,
+    is_active: 1, is_verified: 0, subscription_tier: 'free', avatar_url: null, last_login_at: null,
+  });
 
   const userId = result.lastInsertRowid;
-  const user = db.prepare(
-    'SELECT id, email, first_name as firstName, last_name as lastName, role, phone, company_name as companyName, is_active as isActive, is_verified as isVerified, subscription_tier as subscriptionTier, created_at as createdAt FROM users WHERE id = ?'
-  ).get(userId);
+  const user = db.findOne('users', (u) => u.id === userId);
 
   const accessToken = generateAccessToken(userId, role);
   const refreshToken = generateRefreshToken(userId, role);
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-  db.prepare('INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)').run(userId, refreshToken, expiresAt);
+  db.insert('refresh_tokens', { user_id: userId, token: refreshToken, expires_at: new Date(Date.now() + 7 * 86400000).toISOString() });
 
   if (role === 'welder') {
-    db.prepare('INSERT OR IGNORE INTO worker_profiles (user_id, trade) VALUES (?, ?)').run(userId, 'welder');
+    db.insert('worker_profiles', { user_id: userId, trade: 'welder', experience_years: 0, availability: 'available' });
   }
 
-  db.prepare('INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)').run(userId, 'system', 'Welcome to LinkedWeld!', 'Please verify your email to get started.');
+  db.insert('notifications', { user_id: userId, type: 'system', title: 'Welcome to LinkedWeld!', message: 'Please verify your email to get started.', is_read: 0 });
 
-  return ok(res, {
-    user: { ...user, isVerified: false },
-    tokens: { accessToken, refreshToken },
-    verificationCode
-  }, 201);
+  const safeUser = {
+    id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name,
+    role: user.role, phone: user.phone, companyName: user.company_name,
+    isActive: !!user.is_active, isVerified: false, subscriptionTier: user.subscription_tier, createdAt: user.created_at,
+  };
+
+  return ok(res, { user: safeUser, tokens: { accessToken, refreshToken }, verificationCode: verification_code }, 201);
 }
 
 async function handleLogin(req: VercelRequest, res: VercelResponse) {
   const { email, password } = req.body;
   if (!email || !password) return err(res, 'Email and password are required');
 
-  const db = await getDb();
-  const user: any = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  const db = getDb();
+  const user = db.findOne('users', (u) => u.email === email);
   if (!user) return err(res, 'Invalid credentials', 401);
 
   const valid = await comparePassword(password, user.password_hash);
   if (!valid) return err(res, 'Invalid credentials', 401);
 
-  db.prepare('UPDATE users SET last_login_at = datetime("now") WHERE id = ?').run(user.id);
+  db.update('users', (u) => u.id === user.id, { last_login_at: new Date().toISOString() });
 
   const accessToken = generateAccessToken(user.id, user.role);
   const refreshToken = generateRefreshToken(user.id, user.role);
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-  db.prepare('INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)').run(user.id, refreshToken, expiresAt);
+  db.insert('refresh_tokens', { user_id: user.id, token: refreshToken, expires_at: new Date(Date.now() + 7 * 86400000).toISOString() });
 
   const safeUser = {
     id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name,
     role: user.role, phone: user.phone, avatarUrl: user.avatar_url, companyName: user.company_name,
-    isActive: !!user.is_active, isVerified: !!user.is_verified,
-    subscriptionTier: user.subscription_tier, createdAt: user.created_at
+    isActive: !!user.is_active, isVerified: !!user.is_verified, subscriptionTier: user.subscription_tier, createdAt: user.created_at,
   };
 
   return ok(res, { user: safeUser, tokens: { accessToken, refreshToken } });
@@ -192,22 +141,16 @@ async function handleVerify(req: VercelRequest, res: VercelResponse) {
   const { code } = req.body;
   if (!code) return err(res, 'Verification code is required');
 
-  const db = await getDb();
-  const user: any = db.prepare('SELECT id, verification_code, verification_expires_at, is_verified FROM users WHERE id = ?').get(auth.userId);
+  const db = getDb();
+  const user = db.findOne('users', (u) => u.id === auth.userId);
   if (!user) return err(res, 'User not found', 404);
   if (user.is_verified) return ok(res, { message: 'Already verified' });
 
-  if (user.verification_code !== String(code)) {
-    return err(res, 'Invalid verification code');
-  }
+  if (user.verification_code !== String(code)) return err(res, 'Invalid verification code');
 
-  const now = new Date();
-  const expires = new Date(user.verification_expires_at);
-  if (now > expires) {
-    return err(res, 'Verification code has expired. Please request a new one.');
-  }
+  if (new Date() > new Date(user.verification_expires_at)) return err(res, 'Verification code has expired.');
 
-  db.prepare('UPDATE users SET is_verified = 1, verification_code = NULL, verification_expires_at = NULL, updated_at = datetime("now") WHERE id = ?').run(auth.userId);
+  db.update('users', (u) => u.id === auth.userId, { is_verified: 1, verification_code: null, verification_expires_at: null });
 
   return ok(res, { message: 'Email verified successfully', isVerified: true });
 }
@@ -215,18 +158,28 @@ async function handleVerify(req: VercelRequest, res: VercelResponse) {
 async function handleMe(req: VercelRequest, res: VercelResponse, method: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-  const db = await getDb();
+  const db = getDb();
 
   if (method === 'GET') {
-    const user = db.prepare('SELECT id, email, first_name as firstName, last_name as lastName, role, phone, avatar_url as avatarUrl, company_name as companyName, is_active as isActive, is_verified as isVerified, subscription_tier as subscriptionTier, created_at as createdAt FROM users WHERE id = ?').get(auth.userId);
-    return ok(res, user);
+    const user = db.findOne('users', (u) => u.id === auth.userId);
+    if (!user) return err(res, 'User not found', 404);
+    return ok(res, {
+      id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name,
+      role: user.role, phone: user.phone, avatarUrl: user.avatar_url, companyName: user.company_name,
+      isActive: !!user.is_active, isVerified: !!user.is_verified, subscriptionTier: user.subscription_tier, createdAt: user.created_at,
+    });
   }
 
   if (method === 'PUT') {
     const { firstName, lastName, phone, companyName } = req.body;
-    db.prepare('UPDATE users SET first_name = COALESCE(?, first_name), last_name = COALESCE(?, last_name), phone = COALESCE(?, phone), company_name = COALESCE(?, company_name), updated_at = datetime("now") WHERE id = ?').run(firstName, lastName, phone, companyName, auth.userId);
-    const user = db.prepare('SELECT id, email, first_name as firstName, last_name as lastName, role, phone, company_name as companyName, is_verified as isVerified, subscription_tier as subscriptionTier FROM users WHERE id = ?').get(auth.userId);
-    return ok(res, user);
+    const updates: any = {};
+    if (firstName) updates.first_name = firstName;
+    if (lastName) updates.last_name = lastName;
+    if (phone) updates.phone = phone;
+    if (companyName) updates.company_name = companyName;
+    db.update('users', (u) => u.id === auth.userId, updates);
+    const user = db.findOne('users', (u) => u.id === auth.userId);
+    return ok(res, { id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name, role: user.role, phone: user.phone, companyName: user.company_name, isVerified: !!user.is_verified, subscriptionTier: user.subscription_tier });
   }
 
   return err(res, 'Method not allowed', 405);
@@ -235,19 +188,15 @@ async function handleMe(req: VercelRequest, res: VercelResponse, method: string)
 async function handleRefresh(req: VercelRequest, res: VercelResponse) {
   const { refreshToken } = req.body;
   if (!refreshToken) return err(res, 'Refresh token required', 401);
-
   try {
     const decoded = verifyRefreshToken(refreshToken);
-    const db = await getDb();
-    const stored = db.prepare('SELECT * FROM refresh_tokens WHERE token = ?').get(refreshToken);
+    const db = getDb();
+    const stored = db.findOne('refresh_tokens', (t) => t.token === refreshToken);
     if (!stored) return err(res, 'Invalid refresh token', 401);
-
-    db.prepare('DELETE FROM refresh_tokens WHERE token = ?').run(refreshToken);
+    db.remove('refresh_tokens', (t) => t.token === refreshToken);
     const newAccess = generateAccessToken(decoded.userId, decoded.role);
     const newRefresh = generateRefreshToken(decoded.userId, decoded.role);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    db.prepare('INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)').run(decoded.userId, newRefresh, expiresAt);
-
+    db.insert('refresh_tokens', { user_id: decoded.userId, token: newRefresh, expires_at: new Date(Date.now() + 7 * 86400000).toISOString() });
     return ok(res, { accessToken: newAccess, refreshToken: newRefresh });
   } catch {
     return err(res, 'Invalid refresh token', 401);
@@ -256,36 +205,33 @@ async function handleRefresh(req: VercelRequest, res: VercelResponse) {
 
 async function handleLogout(req: VercelRequest, res: VercelResponse) {
   const { refreshToken } = req.body;
-  if (refreshToken) {
-    const db = await getDb();
-    db.prepare('DELETE FROM refresh_tokens WHERE token = ?').run(refreshToken);
-  }
+  if (refreshToken) { const db = getDb(); db.remove('refresh_tokens', (t) => t.token === refreshToken); }
   return ok(res, { message: 'Logged out' });
 }
 
-// ──────────────── PROJECT HANDLERS ────────────────
+// ──────────── PROJECTS ────────────
 
 async function handleProjects(req: VercelRequest, res: VercelResponse, method: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-  const db = await getDb();
+  const db = getDb();
 
   if (method === 'GET') {
     const { page = '1', limit = '20', status, search } = req.query as any;
-    const offset = (parseInt(page) - 1) * parseInt(limit);
-    let where = '1=1';
-    const params: any[] = [];
-    if (status && status !== 'all') { where += ' AND p.status = ?'; params.push(status); }
-    if (search) { where += ' AND (p.title LIKE ? OR p.location LIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
-    const total = (db.prepare(`SELECT COUNT(*) as count FROM projects p WHERE ${where}`).get(...params) as any)?.count || 0;
-    const projects = db.prepare(`SELECT p.* FROM projects p WHERE ${where} ORDER BY p.created_at DESC LIMIT ? OFFSET ?`).all(...params, parseInt(limit), offset);
-    return ok(res, { projects, meta: { page: parseInt(page), limit: parseInt(limit), total, totalPages: Math.ceil(total / parseInt(limit)) } });
+    let all = db.findAll('projects');
+    if (status && status !== 'all') all = all.filter((p) => p.status === status);
+    if (search) all = all.filter((p) => (p.title || '').toLowerCase().includes(search.toLowerCase()) || (p.location || '').toLowerCase().includes(search.toLowerCase()));
+    all.sort((a: any, b: any) => (b.created_at || '').localeCompare(a.created_at || ''));
+    const total = all.length;
+    const pg = parseInt(page); const lim = parseInt(limit);
+    const projects = all.slice((pg - 1) * lim, pg * lim);
+    return ok(res, { projects, meta: { page: pg, limit: lim, total, totalPages: Math.ceil(total / lim) } });
   }
 
   if (method === 'POST') {
     const { title, description, status: s, priority, budget, currency, location, startDate, endDate } = req.body;
-    const result = db.prepare('INSERT INTO projects (title, description, client_id, status, priority, budget, currency, location, start_date, end_date) VALUES (?,?,?,?,?,?,?,?,?,?)').run(title, description, auth.userId, s || 'draft', priority || 'medium', budget, currency || 'EUR', location, startDate, endDate);
-    const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(result.lastInsertRowid);
+    const result = db.insert('projects', { title, description, client_id: auth.userId, status: s || 'draft', priority: priority || 'medium', budget, currency: currency || 'EUR', location, start_date: startDate, end_date: endDate, progress: 0 });
+    const project = db.findOne('projects', (p) => p.id === result.lastInsertRowid);
     return ok(res, project, 201);
   }
 
@@ -295,135 +241,147 @@ async function handleProjects(req: VercelRequest, res: VercelResponse, method: s
 async function handleProjectById(req: VercelRequest, res: VercelResponse, method: string, id: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-  const db = await getDb();
+  const db = getDb();
+  const numId = parseInt(id);
 
   if (method === 'GET') {
-    const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(id);
+    const project = db.findOne('projects', (p) => p.id === numId);
     if (!project) return err(res, 'Project not found', 404);
     return ok(res, project);
   }
-
   if (method === 'PUT') {
     const { title, description, status, priority, budget, location, startDate, endDate, progress } = req.body;
-    db.prepare('UPDATE projects SET title=COALESCE(?,title), description=COALESCE(?,description), status=COALESCE(?,status), priority=COALESCE(?,priority), budget=COALESCE(?,budget), location=COALESCE(?,location), start_date=COALESCE(?,start_date), end_date=COALESCE(?,end_date), progress=COALESCE(?,progress), updated_at=datetime("now") WHERE id=?').run(title, description, status, priority, budget, location, startDate, endDate, progress, id);
-    const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(id);
-    return ok(res, project);
+    const updates: any = {};
+    if (title !== undefined) updates.title = title;
+    if (description !== undefined) updates.description = description;
+    if (status !== undefined) updates.status = status;
+    if (priority !== undefined) updates.priority = priority;
+    if (budget !== undefined) updates.budget = budget;
+    if (location !== undefined) updates.location = location;
+    if (startDate !== undefined) updates.start_date = startDate;
+    if (endDate !== undefined) updates.end_date = endDate;
+    if (progress !== undefined) updates.progress = progress;
+    db.update('projects', (p) => p.id === numId, updates);
+    return ok(res, db.findOne('projects', (p) => p.id === numId));
   }
-
   if (method === 'DELETE') {
-    db.prepare('UPDATE projects SET status = "cancelled", updated_at = datetime("now") WHERE id = ?').run(id);
+    db.update('projects', (p) => p.id === numId, { status: 'cancelled' });
     return ok(res, { message: 'Project cancelled' });
   }
-
   return err(res, 'Method not allowed', 405);
 }
 
-// ──────────────── WORKER HANDLERS ────────────────
+// ──────────── WORKERS ────────────
 
 async function handleWorkers(req: VercelRequest, res: VercelResponse) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
   if (req.method !== 'GET') return err(res, 'Method not allowed', 405);
-
-  const db = await getDb();
-  const workers = db.prepare('SELECT u.id, u.first_name as firstName, u.last_name as lastName, u.email, u.avatar_url as avatarUrl, wp.trade, wp.experience_years as experienceYears, wp.hourly_rate as hourlyRate, wp.skills, wp.availability, wp.location FROM users u LEFT JOIN worker_profiles wp ON u.id = wp.user_id WHERE u.role = "welder" AND u.is_active = 1').all();
-  return ok(res, workers.map((w: any) => ({ ...w, skills: w.skills ? JSON.parse(w.skills) : [] })));
+  const db = getDb();
+  const welders = db.findAll('users', (u) => u.role === 'welder' && u.is_active);
+  const result = welders.map((u) => {
+    const wp = db.findOne('worker_profiles', (w) => w.user_id === u.id);
+    return { id: u.id, firstName: u.first_name, lastName: u.last_name, email: u.email, avatarUrl: u.avatar_url, trade: wp?.trade, experienceYears: wp?.experience_years, hourlyRate: wp?.hourly_rate, skills: wp?.skills ? JSON.parse(wp.skills) : [], availability: wp?.availability, location: wp?.location };
+  });
+  return ok(res, result);
 }
 
 async function handleWorkerById(req: VercelRequest, res: VercelResponse, id: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-  if (req.method !== 'GET') return err(res, 'Method not allowed', 405);
-
-  const db = await getDb();
-  const worker = db.prepare('SELECT u.id, u.first_name as firstName, u.last_name as lastName, u.email, wp.* FROM users u LEFT JOIN worker_profiles wp ON u.id = wp.user_id WHERE u.id = ?').get(id);
-  if (!worker) return err(res, 'Worker not found', 404);
-  return ok(res, worker);
+  const db = getDb();
+  const u = db.findOne('users', (u) => u.id === parseInt(id));
+  if (!u) return err(res, 'Worker not found', 404);
+  const wp = db.findOne('worker_profiles', (w) => w.user_id === u.id);
+  return ok(res, { id: u.id, firstName: u.first_name, lastName: u.last_name, email: u.email, ...wp });
 }
 
 async function handleCheckIn(req: VercelRequest, res: VercelResponse) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-
-  const db = await getDb();
+  const db = getDb();
   const { projectId, latitude, longitude, notes } = req.body;
-  const result = db.prepare('INSERT INTO attendance_records (worker_id, project_id, check_in, check_in_lat, check_in_lng, notes) VALUES (?, ?, datetime("now"), ?, ?, ?)').run(auth.userId, projectId, latitude, longitude, notes);
+  const result = db.insert('attendance_records', { worker_id: auth.userId, project_id: projectId, check_in: new Date().toISOString(), check_in_lat: latitude, check_in_lng: longitude, notes });
   return ok(res, { id: result.lastInsertRowid }, 201);
 }
 
 async function handleCheckOut(req: VercelRequest, res: VercelResponse) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-
-  const db = await getDb();
+  const db = getDb();
   const { latitude, longitude } = req.body;
-  const record: any = db.prepare('SELECT * FROM attendance_records WHERE worker_id = ? AND check_out IS NULL ORDER BY check_in DESC LIMIT 1').get(auth.userId);
-  if (!record) return err(res, 'No active check-in found', 404);
-
-  const checkIn = new Date(record.check_in);
-  const hours = (Date.now() - checkIn.getTime()) / (1000 * 60 * 60);
-  db.prepare('UPDATE attendance_records SET check_out = datetime("now"), check_out_lat = ?, check_out_lng = ?, hours_worked = ? WHERE id = ?').run(latitude, longitude, Math.round(hours * 100) / 100, record.id);
+  const records = db.findAll('attendance_records', (r) => r.worker_id === auth.userId && !r.check_out).sort((a: any, b: any) => (b.check_in || '').localeCompare(a.check_in || ''));
+  if (!records.length) return err(res, 'No active check-in found', 404);
+  const record = records[0];
+  const hours = (Date.now() - new Date(record.check_in).getTime()) / 3600000;
+  db.update('attendance_records', (r) => r.id === record.id, { check_out: new Date().toISOString(), check_out_lat: latitude, check_out_lng: longitude, hours_worked: Math.round(hours * 100) / 100 });
   return ok(res, { hoursWorked: Math.round(hours * 100) / 100 });
 }
 
-// ──────────────── EXPENSE HANDLERS ────────────────
+// ──────────── EXPENSES ────────────
 
 async function handleExpenses(req: VercelRequest, res: VercelResponse, method: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-  const db = await getDb();
+  const db = getDb();
 
   if (method === 'GET') {
-    const expenses = db.prepare('SELECT e.*, ec.name as categoryName FROM expenses e LEFT JOIN expense_categories ec ON e.category_id = ec.id WHERE e.user_id = ? ORDER BY e.created_at DESC').all(auth.userId);
-    return ok(res, expenses);
+    const expenses = db.findAll('expenses', (e) => e.user_id === auth.userId).sort((a: any, b: any) => (b.created_at || '').localeCompare(a.created_at || ''));
+    const result = expenses.map((e) => {
+      const cat = db.findOne('expense_categories', (c) => c.id === e.category_id);
+      return { ...e, categoryName: cat?.name };
+    });
+    return ok(res, result);
   }
 
   if (method === 'POST') {
     const { projectId, categoryId, amount, currency, description, expenseDate, notes } = req.body;
-    const result = db.prepare('INSERT INTO expenses (user_id, project_id, category_id, amount, currency, description, expense_date, notes) VALUES (?,?,?,?,?,?,?,?)').run(auth.userId, projectId, categoryId, amount, currency || 'EUR', description, expenseDate, notes);
+    const result = db.insert('expenses', { user_id: auth.userId, project_id: projectId, category_id: categoryId, amount, currency: currency || 'EUR', description, expense_date: expenseDate || new Date().toISOString(), notes, status: 'pending' });
     return ok(res, { id: result.lastInsertRowid }, 201);
   }
 
   return err(res, 'Method not allowed', 405);
 }
 
-async function handleExpenseCategories(req: VercelRequest, res: VercelResponse) {
-  const db = await getDb();
-  return ok(res, db.prepare('SELECT * FROM expense_categories').all());
+async function handleExpenseCategories(res: VercelResponse) {
+  return ok(res, getDb().findAll('expense_categories'));
 }
 
 async function handleExpenseById(req: VercelRequest, res: VercelResponse, method: string, id: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-  const db = await getDb();
+  const db = getDb();
+  const numId = parseInt(id);
 
   if (method === 'GET') {
-    const expense = db.prepare('SELECT e.*, ec.name as categoryName FROM expenses e LEFT JOIN expense_categories ec ON e.category_id = ec.id WHERE e.id = ?').get(id);
-    return ok(res, expense);
+    const e = db.findOne('expenses', (e) => e.id === numId);
+    if (!e) return err(res, 'Expense not found', 404);
+    const cat = db.findOne('expense_categories', (c) => c.id === e.category_id);
+    return ok(res, { ...e, categoryName: cat?.name });
   }
 
   if (method === 'PUT') {
-    db.prepare('UPDATE expenses SET status = ?, approved_by = ?, approved_at = datetime("now"), updated_at = datetime("now") WHERE id = ?').run(req.body.status, auth.userId, id);
+    db.update('expenses', (e) => e.id === numId, { status: req.body.status, approved_by: auth.userId, approved_at: new Date().toISOString() });
     return ok(res, { message: 'Expense updated' });
   }
 
   return err(res, 'Method not allowed', 405);
 }
 
-// ──────────────── DOCUMENT HANDLERS ────────────────
+// ──────────── DOCUMENTS ────────────
 
 async function handleDocuments(req: VercelRequest, res: VercelResponse, method: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-  const db = await getDb();
+  const db = getDb();
 
   if (method === 'GET') {
-    return ok(res, db.prepare('SELECT * FROM documents WHERE user_id = ? ORDER BY created_at DESC').all(auth.userId));
+    return ok(res, db.findAll('documents', (d) => d.user_id === auth.userId).sort((a: any, b: any) => (b.created_at || '').localeCompare(a.created_at || '')));
   }
 
   if (method === 'POST') {
     const { title, category, projectId, expiryDate, fileName, filePath, fileSize, mimeType } = req.body;
-    const result = db.prepare('INSERT INTO documents (user_id, project_id, title, file_name, file_path, file_size, mime_type, category, expiry_date) VALUES (?,?,?,?,?,?,?,?,?)').run(auth.userId, projectId, title, fileName || 'uploaded-file', filePath || '/uploads/placeholder', fileSize || 0, mimeType || 'application/octet-stream', category || 'other', expiryDate);
+    const result = db.insert('documents', { user_id: auth.userId, project_id: projectId, title, file_name: fileName || 'uploaded-file', file_path: filePath || '/uploads/placeholder', file_size: fileSize || 0, mime_type: mimeType || 'application/octet-stream', category: category || 'other', expiry_date: expiryDate, is_shared: 0 });
     return ok(res, { id: result.lastInsertRowid }, 201);
   }
 
@@ -433,106 +391,80 @@ async function handleDocuments(req: VercelRequest, res: VercelResponse, method: 
 async function handleDocumentDelete(req: VercelRequest, res: VercelResponse, id: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-
-  const db = await getDb();
-  db.prepare('DELETE FROM documents WHERE id = ? AND user_id = ?').run(id, auth.userId);
+  getDb().remove('documents', (d) => d.id === parseInt(id) && d.user_id === auth.userId);
   return ok(res, { message: 'Document deleted' });
 }
 
-// ──────────────── NOTIFICATION HANDLERS ────────────────
+// ──────────── NOTIFICATIONS ────────────
 
 async function handleNotifications(req: VercelRequest, res: VercelResponse) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-  if (req.method !== 'GET') return err(res, 'Method not allowed', 405);
-
-  const db = await getDb();
-  return ok(res, db.prepare('SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50').all(auth.userId));
+  return ok(res, getDb().findAll('notifications', (n) => n.user_id === auth.userId).sort((a: any, b: any) => (b.created_at || '').localeCompare(a.created_at || '')).slice(0, 50));
 }
 
 async function handleUnreadCount(req: VercelRequest, res: VercelResponse) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-
-  const db = await getDb();
-  const result = db.prepare('SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0').get(auth.userId) as any;
-  return ok(res, { count: result?.count || 0 });
+  return ok(res, { count: getDb().count('notifications', (n) => n.user_id === auth.userId && !n.is_read) });
 }
 
 async function handleReadAll(req: VercelRequest, res: VercelResponse) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-
-  const db = await getDb();
-  db.prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ?').run(auth.userId);
+  getDb().update('notifications', (n) => n.user_id === auth.userId, { is_read: 1 });
   return ok(res, { message: 'All marked as read' });
 }
 
 async function handleNotificationById(req: VercelRequest, res: VercelResponse, method: string, id: string) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-  const db = await getDb();
-
-  if (method === 'PUT') {
-    db.prepare('UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?').run(id, auth.userId);
-    return ok(res, { message: 'Marked as read' });
-  }
-
-  if (method === 'DELETE') {
-    db.prepare('DELETE FROM notifications WHERE id = ? AND user_id = ?').run(id, auth.userId);
-    return ok(res, { message: 'Notification deleted' });
-  }
-
+  const db = getDb();
+  const numId = parseInt(id);
+  if (method === 'PUT') { db.update('notifications', (n) => n.id === numId && n.user_id === auth.userId, { is_read: 1 }); return ok(res, { message: 'Marked as read' }); }
+  if (method === 'DELETE') { db.remove('notifications', (n) => n.id === numId && n.user_id === auth.userId); return ok(res, { message: 'Notification deleted' }); }
   return err(res, 'Method not allowed', 405);
 }
 
-// ──────────────── REPORT HANDLERS ────────────────
+// ──────────── REPORTS ────────────
 
 async function handleDashboardSummary(req: VercelRequest, res: VercelResponse) {
   const auth = getUserFromRequest(req);
   if (!auth) return err(res, 'Not authenticated', 401);
-
-  const db = await getDb();
-  const totalProjects = (db.prepare('SELECT COUNT(*) as c FROM projects').get() as any)?.c || 0;
-  const activeProjects = (db.prepare("SELECT COUNT(*) as c FROM projects WHERE status = 'in_progress'").get() as any)?.c || 0;
-  const totalWorkers = (db.prepare("SELECT COUNT(*) as c FROM users WHERE role = 'welder'").get() as any)?.c || 0;
-  const totalExpenses = (db.prepare('SELECT COALESCE(SUM(amount), 0) as total FROM expenses').get() as any)?.total || 0;
-  const pendingExpenses = (db.prepare("SELECT COUNT(*) as c FROM expenses WHERE status = 'pending'").get() as any)?.c || 0;
-  const totalRevenue = (db.prepare('SELECT COALESCE(SUM(budget), 0) as total FROM projects').get() as any)?.total || 0;
-
-  return ok(res, { totalProjects, activeProjects, totalWorkers, totalExpenses, pendingExpenses, totalRevenue });
+  const db = getDb();
+  return ok(res, {
+    totalProjects: db.count('projects'),
+    activeProjects: db.count('projects', (p) => p.status === 'in_progress'),
+    totalWorkers: db.count('users', (u) => u.role === 'welder'),
+    totalExpenses: db.sum('expenses', 'amount'),
+    pendingExpenses: db.count('expenses', (e) => e.status === 'pending'),
+    totalRevenue: db.sum('projects', 'budget'),
+  });
 }
 
-// ──────────────── ADMIN HANDLERS ────────────────
+// ──────────── ADMIN ────────────
 
 async function handleAdminStats(req: VercelRequest, res: VercelResponse) {
   const auth = getUserFromRequest(req);
   if (!auth || auth.role !== 'admin') return err(res, 'Admin access required', 403);
-
-  const db = await getDb();
-  const totalUsers = (db.prepare('SELECT COUNT(*) as c FROM users').get() as any)?.c || 0;
-  const activeProjects = (db.prepare("SELECT COUNT(*) as c FROM projects WHERE status != 'cancelled'").get() as any)?.c || 0;
-  const companies = (db.prepare("SELECT COUNT(DISTINCT company_name) as c FROM users WHERE company_name IS NOT NULL").get() as any)?.c || 0;
-
-  return ok(res, { totalUsers, activeProjects, companies });
+  const db = getDb();
+  return ok(res, { totalUsers: db.count('users'), activeProjects: db.count('projects', (p) => p.status !== 'cancelled'), companies: db.countDistinct('users', 'company_name', (u) => !!u.company_name) });
 }
 
 async function handleAdminUsers(req: VercelRequest, res: VercelResponse, method: string) {
   const auth = getUserFromRequest(req);
   if (!auth || auth.role !== 'admin') return err(res, 'Admin access required', 403);
-  const db = await getDb();
-
+  const db = getDb();
   if (method === 'GET') {
-    const users = db.prepare('SELECT id, email, first_name as firstName, last_name as lastName, role, is_active as isActive, subscription_tier as subscriptionTier, created_at as createdAt FROM users ORDER BY created_at DESC').all();
-    return ok(res, users);
+    return ok(res, db.findAll('users').map((u) => ({ id: u.id, email: u.email, firstName: u.first_name, lastName: u.last_name, role: u.role, isActive: !!u.is_active, subscriptionTier: u.subscription_tier, createdAt: u.created_at })));
   }
-
   if (method === 'PUT') {
     const { userId, role, isActive } = req.body;
-    if (role) db.prepare('UPDATE users SET role = ?, updated_at = datetime("now") WHERE id = ?').run(role, userId);
-    if (isActive !== undefined) db.prepare('UPDATE users SET is_active = ?, updated_at = datetime("now") WHERE id = ?').run(isActive ? 1 : 0, userId);
+    const updates: any = {};
+    if (role) updates.role = role;
+    if (isActive !== undefined) updates.is_active = isActive ? 1 : 0;
+    db.update('users', (u) => u.id === userId, updates);
     return ok(res, { message: 'User updated' });
   }
-
   return err(res, 'Method not allowed', 405);
 }

@@ -14,7 +14,8 @@
       "Bash(git branch:*)",
       "Bash(git push:*)",
       "Bash(npm install:*)",
-      "Bash(npx vite build)"
+      "Bash(npx vite build)",
+      "Bash(npx vercel:*)"
     ]
   }
 }
